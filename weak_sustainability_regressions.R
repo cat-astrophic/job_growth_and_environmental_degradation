@@ -315,10 +315,12 @@ df$Wetlands.2011 <- data$Wetlands[3109:6216]
 
 ur <- read.csv(paste0(direc, 'data/ur_codes.csv'))
 
+ur <- ur %>% filter(Attribute == 'RUCC_2023')
+
 ur$FIPS <- ifelse(ur$FIPS < 10000, paste0('0', as.character(ur$FIPS)), as.character(ur$FIPS))
-ur$Large <- ifelse(ur$Code <= 3, 1, 0)
-ur$Small <- ifelse(ur$Code %in% c(4,5), 1, 0)
-ur$Rural <- ifelse(ur$Code >= 6, 1, 0)
+ur$Large <- ifelse(ur$Value <= 3, 1, 0)
+ur$Small <- ifelse(ur$Value %in% c(4,5), 1, 0)
+ur$Rural <- ifelse(ur$Value >= 6, 1, 0)
 
 large <- c()
 small <- c()
@@ -1836,6 +1838,48 @@ change.map <- leaflet(shp$geometry) %>% addTiles() %>% addPolygons(weight = 1.0,
 
 wet.map
 change.map
+
+# Add the water and water change data
+
+w2 <- c()
+w2.c <- c()
+
+for (i in 1:nrow(shp)) {
+  
+  print(paste0('Adding water data for county ', i, ' of 3,108.......'))
+  
+  tmp <- df %>% filter(County == shp$GEOID[i])
+  tmp2 <- data %>% filter(County == shp$GEOID[i]) %>% filter(Year == 2021)
+  
+  w2 <- c(w2, tmp2$Water[1])
+  w2.c <- c(w2.c, tmp$Water[1])
+  
+}
+
+shp$Water <- w2
+shp$Water.Change <- w2.c
+
+q <- quantile(shp$Wetlands.Change, probs = c(0, 0.2, 0.4, 0.6, 0.8), na.rm = TRUE)
+w2c <- c()
+
+for (i in 1:nrow(shp)) {
+  
+  w2c <- c(w2c, max(1,max(which(q < shp$Water.Change[i]))))
+  
+}
+
+shp$W2C <- w2c
+
+# Creating leaflets
+
+pal1 <- colorNumeric(palette = c('white', 'blue'), domain = shp$Water)
+pal2 <- colorNumeric(palette = c('red', 'white', 'blue'), domain = shp$Water.Change)
+
+water.map <- leaflet(shp$geometry) %>% addTiles() %>% addPolygons(weight = 1.0, smoothFactor = 1.0, opacity = 1.0, fillOpacity = 1.0, color = 'black', fillColor = pal1(shp$Water))
+water.change.map <- leaflet(shp$geometry) %>% addTiles() %>% addPolygons(weight = 1.0, smoothFactor = 1.0, opacity = 1.0, fillOpacity = 1.0, color = 'black', fillColor = pal2(shp$Water.Change))
+
+water.map
+water.change.map
 
 # Next up is ag change
 
