@@ -1,4 +1,4 @@
-# This script gets census data and runs regressions post peer-review
+# This script gets census data and runs regressions
 
 # Loading libraries
 
@@ -28,7 +28,7 @@ pd$County <- ifelse(nchar(pd$County) < 5, paste0('0', pd$County), pd$County)
 
 # Get the counties land area from tigris
 
-us_counties <- counties(year = 2020, cb = TRUE)
+us_counties <- counties(cb = TRUE)
 
 # Getting county level ACS data
 
@@ -176,39 +176,17 @@ colnames(data) <- c('County', 'Year', 'Water', 'Development', 'Barren', 'Forests
 
 data$Jobs <- data$Outdoors + data$Construction + data$Manufacturing + data$Wholesale + data$Retial + data$Transportation + data$Finance + data$Information + data$Professional + data$Social + data$Amenities + data$Other_Jobs + data$Public_Administration
 
-# Creating a differenced data set for areas
-
-land.area <- c()
-
-for (i in 1:nrow(data)) {
-  
-  print(i)
-  tmp <- us_counties[which(us_counties$GEOID == data$County[i]),]
-  
-  land.area <- c(land.area, tmp$ALAND/1000000)
-  
-}
-
-data$AREA <- land.area
-
-data$Water_Area <- data$Water * data$AREA
-data$Development_Area <- data$Development * data$AREA
-data$Barren_Area <- data$Barren * data$AREA
-data$Forests_Area <- data$Forests * data$AREA
-data$Shrublands_Area <- data$Shrublands * data$AREA
-data$Grasslands_Area <- data$Grasslands * data$AREA
-data$Agriculture_Area <- data$Agriculture * data$AREA
-data$Wetlands_Area <- data$Wetlands * data$AREA
+# Creating a differenced data set
 
 counties <- data$County[1:3108]
-water <- data$Water_Area[1:3108] - data$Water_Area[3109:6216]
-development <- data$Development_Area[1:3108] - data$Development_Area[3109:6216]
-barren <- data$Barren_Area[1:3108] - data$Barren_Area[3109:6216]
-forests <- data$Forests_Area[1:3108] - data$Forests_Area[3109:6216]
-shrublands <- data$Shrublands_Area[1:3108] - data$Shrublands_Area[3109:6216]
-grasslands <- data$Grasslands_Area[1:3108] - data$Grasslands_Area[3109:6216]
-agriculture <- data$Agriculture_Area[1:3108] - data$Agriculture_Area[3109:6216]
-wetlands <- data$Wetlands_Area[1:3108] - data$Wetlands_Area[3109:6216]
+water <- data$Water[1:3108] - data$Water[3109:6216]
+development <- data$Development[1:3108] - data$Development[3109:6216]
+barren <- data$Barren[1:3108] - data$Barren[3109:6216]
+forests <- data$Forests[1:3108] - data$Forests[3109:6216]
+shrublands <- data$Shrublands[1:3108] - data$Shrublands[3109:6216]
+grasslands <- data$Grasslands[1:3108] - data$Grasslands[3109:6216]
+agriculture <- data$Agriculture[1:3108] - data$Agriculture[3109:6216]
+wetlands <- data$Wetlands[1:3108] - data$Wetlands[3109:6216]
 population <- data$Population[1:3108] - data$Population[3109:6216]
 income <- 1.36*data$Income[1:3108] - data$Income[3109:6216]
 education <- data$Education_BS[1:3108] - data$Education_BS[3109:6216]
@@ -324,14 +302,14 @@ df$State <- substr(df$County, 1, 2)
 
 # Adding historical values of land cover
 
-df$Water.2011 <- data$Water_Area[3109:6216]
-df$Development.2011 <- data$Development_Area[3109:6216]
-df$Barren.2011 <- data$Barren_Area[3109:6216]
-df$Forests.2011 <- data$Forests_Area[3109:6216]
-df$Shrublands.2011 <- data$Shrublands_Area[3109:6216]
-df$Grasslands.2011 <- data$Grasslands_Area[3109:6216]
-df$Agriculture.2011 <- data$Agriculture_Area[3109:6216]
-df$Wetlands.2011 <- data$Wetlands_Area[3109:6216]
+df$Water.2011 <- data$Water[3109:6216]
+df$Development.2011 <- data$Development[3109:6216]
+df$Barren.2011 <- data$Barren[3109:6216]
+df$Forests.2011 <- data$Forests[3109:6216]
+df$Shrublands.2011 <- data$Shrublands[3109:6216]
+df$Grasslands.2011 <- data$Grasslands[3109:6216]
+df$Agriculture.2011 <- data$Agriculture[3109:6216]
+df$Wetlands.2011 <- data$Wetlands[3109:6216]
 
 # Adding urban-rural continuum codes
 
@@ -364,27 +342,28 @@ df$Large <- large
 df$Small <- small
 df$Rural <- rural
 
-# Adding historical values of land cover
+# Adding land area data
 
-df$Water.2011 <- data$Water_Area[3109:6216]
-df$Development.2011 <- data$Development_Area[3109:6216]
-df$Barren.2011 <- data$Barren_Area[3109:6216]
-df$Forests.2011 <- data$Forests_Area[3109:6216]
-df$Shrublands.2011 <- data$Shrublands_Area[3109:6216]
-df$Grasslands.2011 <- data$Grasslands_Area[3109:6216]
-df$Agriculture.2011 <- data$Agriculture_Area[3109:6216]
-df$Wetlands.2011 <- data$Wetlands_Area[3109:6216]
+land.area <- c()
 
-# Adding historical values of land cover
+for (i in 1:nrow(df)) {
+  
+  print(paste0('Getting land area for county ', i, ' of 3,108.......'))
+  
+  tmp <- us_counties %>% filter(GEOID == df$County[i])
+  land.area <- c(land.area, tmp$ALAND[1])
+  
+}
 
-df$Water.2011P <- data$Water[3109:6216]
-df$Development.2011P <- data$Development[3109:6216]
-df$Barren.2011P <- data$Barren[3109:6216]
-df$Forests.2011P <- data$Forests[3109:6216]
-df$Shrublands.2011P <- data$Shrublands[3109:6216]
-df$Grasslands.2011P <- data$Grasslands[3109:6216]
-df$Agriculture.2011P <- data$Agriculture[3109:6216]
-df$Wetlands.2011P <- data$Wetlands[3109:6216]
+df$Land_Area <- land.area
+
+df$Development_Area <- df$Land_Area * df$Development.2011
+df$Barren_Area <- df$Land_Area * df$Barren.2011
+df$Forests_Area <- df$Land_Area * df$Forests.2011
+df$Shrublands_Area <- df$Land_Area * df$Shrublands.2011
+df$Grasslands_Area <- df$Land_Area * df$Grasslands.2011
+df$Agriculture_Area <- df$Land_Area * df$Agriculture.2011
+df$Wetlands_Area <- df$Land_Area * df$Wetlands.2011
 
 # Placebo test prep
 
@@ -407,43 +386,35 @@ df$Bartik.Placebo <- df$Bartik[xxx]
 
 water.mod <- ivreg(Water ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                    + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                   + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                   + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                   + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 development.mod <- ivreg(Development ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                          + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                         + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                         + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                         + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 barren.mod <- ivreg(Barren ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                     + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                    + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                    + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                    + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 forests.mod <- ivreg(Forests ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                      + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                     + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                     + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                     + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 shrublands.mod <- ivreg(Shrublands ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                         + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                        + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                        + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                        + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 grasslands.mod <- ivreg(Grasslands ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                         + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                        + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                        + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                        + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 agriculture.mod <- ivreg(Agriculture ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                          + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                         + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                         + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                         + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 wetlands.mod <- ivreg(Wetlands ~ Employment_Growth_Rate.Placebo + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                       + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                      + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                      + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
+                      + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate.Placebo + Bartik.Placebo, data = df)
 
 water.modx <- coeftest(water.mod, vcov = vcovCL(water.mod, type = 'HC1'))
 development.modx <- coeftest(development.mod, vcov = vcovCL(development.mod, type = 'HC1'))
@@ -458,43 +429,35 @@ wetlands.modx <- coeftest(wetlands.mod, vcov = vcovCL(wetlands.mod, type = 'HC1'
 
 water.mod2 <- ivreg(Water.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                     + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                    + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                    + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                    + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 development.mod2 <- ivreg(Development.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                           + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                          + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                          + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                          + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 barren.mod2 <- ivreg(Barren.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                      + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                     + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                     + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                     + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 forests.mod2 <- ivreg(Forests.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                       + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                      + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                      + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                      + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 shrublands.mod2 <- ivreg(Shrublands.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                          + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                         + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                         + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                         + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 grasslands.mod2 <- ivreg(Grasslands.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                          + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                         + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                         + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                         + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 agriculture.mod2 <- ivreg(Agriculture.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                           + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                          + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                          + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                          + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 wetlands.mod2 <- ivreg(Wetlands.Placebo ~ Employment_Growth_Rate + Population + Income + Education_BS + Unemployment + Commute_Solo_By_Car + Public_Transit + New_Residents
                        + Housing_Units + Development.2011 + Barren.2011 + Forests.2011 + Shrublands.2011 + Grasslands.2011 + Agriculture.2011
-                       + Wetlands.2011 + Development.2011P + Barren.2011P + Forests.2011P + Shrublands.2011P + Grasslands.2011P + Agriculture.2011P
-                       + Wetlands.2011P + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
+                       + Wetlands.2011 + Rural + Small + factor(State) | . - Employment_Growth_Rate + Bartik, data = df)
 
 water.mod2x <- coeftest(water.mod2, vcov = vcovCL(water.mod2, type = 'HC1'))
 development.mod2x <- coeftest(development.mod2, vcov = vcovCL(development.mod2, type = 'HC1'))
@@ -504,4 +467,35 @@ shrublands.mod2x <- coeftest(shrublands.mod2, vcov = vcovCL(shrublands.mod2, typ
 grasslands.mod2x <- coeftest(grasslands.mod2, vcov = vcovCL(grasslands.mod2, type = 'HC1'))
 agriculture.mod2x <- coeftest(agriculture.mod2, vcov = vcovCL(agriculture.mod2, type = 'HC1'))
 wetlands.mod2x <- coeftest(wetlands.mod2, vcov = vcovCL(wetlands.mod2, type = 'HC1'))
+
+# Results
+
+stargazer(water.mod, development.mod, barren.mod, forests.mod, shrublands.mod, grasslands.mod,
+          agriculture.mod, wetlands.mod, type = 'text', omit = c('State'))
+
+stargazer(water.mod2, development.mod2, barren.mod2, forests.mod2, shrublands.mod2, grasslands.mod2,
+          agriculture.mod2, wetlands.mod2, type = 'text', omit = c('State'))
+
+stargazer(water.modx, development.modx, barren.modx, forests.modx, shrublands.modx, grasslands.modx,
+          agriculture.modx, wetlands.modx, type = 'text', omit = c('State'))
+
+stargazer(water.mod2x, development.mod2x, barren.mod2x, forests.mod2x, shrublands.mod2x, grasslands.mod2x,
+          agriculture.mod2x, wetlands.mod2x, type = 'text', omit = c('State'))
+
+# Saving results
+
+write.csv(stargazer(water.modx, development.modx, barren.modx, forests.modx, shrublands.modx, grasslands.modx, agriculture.modx, wetlands.modx, omit.stat = c('f', 'ser'), omit = c('State')), paste0(direc, 'results/placebo.txt'), row.names = FALSE)
+write.csv(stargazer(water.mod2x, development.mod2x, barren.mod2x, forests.mod2x, shrublands.mod2x, grasslands.mod2x, agriculture.mod2x, wetlands.mod2x, omit.stat = c('f', 'ser'), omit = c('State')), paste0(direc, 'results/placebo2.txt'), row.names = FALSE)
+
+# Saving additional regression stats
+
+f.stats.1 <- rep(392.02, 8)
+f.stats.2 <- rep(69.84, 8)
+
+nobs.1 <- rep(3106, 8)
+nobs.2 <- rep(3106, 8)
+
+additional.stats <- as.data.frame(rbind(f.stats.1, f.stats.2, nobs.1, nobs.2))
+
+write.csv(additional.stats, paste0(direc, 'results/placebo_stats.txt'), row.names = TRUE)
 
