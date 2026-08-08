@@ -28,7 +28,7 @@ pd$County <- ifelse(nchar(pd$County) < 5, paste0('0', pd$County), pd$County)
 
 # Get the counties land area from tigris
 
-us_counties <- counties(cb = TRUE)
+us_counties <- counties(year = 2020)
 
 # Getting county level ACS data
 
@@ -326,15 +326,29 @@ large <- c()
 small <- c()
 rural <- c()
 
+ct <- c('09001', '09003', '09005', '09007', '09009', '09011', '09013', '09015')
+ct2 <- c(1,1,0,1,1,1,1,1)
+ct3 <- c(0,0,1,0,0,0,0,0)
+
 for (i in 1:nrow(df)) {
   
   print(paste0('Designating rural-urban status for county ', i, ' of 3,108.......'))
   
-  tmp <- ur %>% filter(FIPS == df$County[i])
-  
-  large <- c(large, tmp$Large[1])
-  small <- c(small, tmp$Small[1])
-  rural <- c(rural, tmp$Rural[1])
+  if (df$State[i] != '09') {
+    
+    tmp <- ur %>% filter(FIPS == df$County[i])
+    
+    large <- c(large, tmp$Large[1])
+    small <- c(small, tmp$Small[1])
+    rural <- c(rural, tmp$Rural[1])
+    
+  } else {
+    
+    large <- c(large, ct2[which(ct == df$County[i])])
+    small <- c(small, ct3[which(ct == df$County[i])])
+    rural <- c(rural, 0)
+    
+  }
   
 }
 
@@ -489,8 +503,8 @@ write.csv(stargazer(water.mod2x, development.mod2x, barren.mod2x, forests.mod2x,
 
 # Saving additional regression stats
 
-f.stats.1 <- rep(392.02, 8)
-f.stats.2 <- rep(69.84, 8)
+f.stats.1 <- rep(393, 8)
+f.stats.2 <- rep(70, 8)
 
 nobs.1 <- rep(3106, 8)
 nobs.2 <- rep(3106, 8)
